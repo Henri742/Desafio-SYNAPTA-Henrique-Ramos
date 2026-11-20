@@ -1,212 +1,260 @@
-# 📊 Desafio Inicial SYNAPTA 2026 — Análise de Preços de Aluguel em São Paulo
+# Aluguel em São Paulo: o que acompanha os preços mais altos e mais baixos
 
-**Candidato:** Henrique Leandro Ramos Silva  
-**Matrícula:** 01907072  
-**Curso / Período:** Bacharelado em Ciência da Computação (2º Período) — UNINASSAU Maceió  
-**Opção Escolhida:** Opção 1 — Análise de preços de aluguel em São Paulo  
-**Supervisão:** Coordenação SYNAPTA — Profa. Vitória Lo-Ruama Gonçalves Freire  
+Desafio inicial SYNAPTA 2026 - Opção 1 (análise de preços de aluguel em São Paulo)
 
----
+- **Candidato:** Henrique Leandro Ramos Silva
+- **Matrícula:** 01907072
+- **Curso:** Ciência da Computação, 2º período - UNINASSAU Maceió
 
-## 🎯 1. Problema e Pergunta Orientadora
+## Pergunta que guiou a análise
 
-O mercado de locação residencial na cidade de São Paulo é caracterizado por forte heterogeneidade socioespacial e estrutural. O objetivo deste projeto é investigar empiricamente como atributos físicos (área útil, número de quartos, vagas de garagem e tipologia construtiva) e a localização geográfica (distrito/bairro) se associam aos valores anunciados de aluguel e ao custo total mensal de moradia.
+> Quais características parecem acompanhar os maiores e os menores preços de aluguel, e o que os dados não permitem concluir?
 
-> **Pergunta orientadora:** *"Quais características parecem acompanhar os maiores e os menores preços de aluguel e o que os dados não permitem concluir?"*
+A ideia foi olhar para localização, área, quartos, vagas e tipo de imóvel e ver quais deles andam junto com o valor do aluguel. Não fiz previsão nem modelo, só análise descritiva.
 
----
+## Dados
 
-## 📂 2. Fonte dos Dados e Descrição das Colunas
+- **Fonte:** [Sao Paulo Housing Prices (Kaggle)](https://www.kaggle.com/datasets/renatosn/sao-paulo-housing-prices)
+- **Arquivo usado:** `data.csv`
+- **Tamanho original:** 11.657 linhas e 8 colunas
 
-* **Dataset Oficial no Kaggle:** [Sao Paulo Housing Prices](https://www.kaggle.com/datasets/renatosn/sao-paulo-housing-prices)
-* **Arquivo Principal:** `data.csv`
-* **Volume Inicial:** **11.657 linhas** (imóveis anunciados) e **8 colunas**.
+O dataset não está no repositório. Para baixar, veja [data/COMO_BAIXAR_OS_DADOS.md](data/COMO_BAIXAR_OS_DADOS.md).
 
-### Dicionário de Variáveis Originais (Descritas com palavras próprias)
+### O que cada coluna significa
 
-| Coluna | Tipo | Descrição Funcional |
-| :--- | :---: | :--- |
-| `address` | Texto (`string`) | Logradouro (rua, avenida, alameda ou travessa) onde o imóvel está situado, sem o número predial. |
-| `district` | Texto (`string`) | Bairro ou distrito da região metropolitana/capital onde o imóvel se localiza (1.199 localidades distintas). |
-| `area` | Inteiro (`int64`) | Área útil ou construída do imóvel expressa em metros quadrados ($	ext{m}^2$). |
-| `bedrooms` | Inteiro (`int64`) | Quantidade de dormitórios (quartos) disponíveis no imóvel. |
-| `garage` | Inteiro (`int64`) | Número de vagas de estacionamento/garagem vinculadas ao imóvel. |
-| `type` | Texto (`string`) | Categoria construtiva do imóvel: *Apartamento*, *Casa*, *Studio e kitnet* ou *Casa em condomínio*. |
-| `rent` | Inteiro (`int64`) | Valor mensal anunciado exclusivamente para a locação do imóvel (em Reais — R$), sem taxas adicionais. |
-| `total` | Inteiro (`int64`) | Despesa mensal total estimada para o inquilino (em Reais — R$), somando aluguel base, taxa de condomínio, IPTU e seguro incêndio. |
+| Coluna | O que é |
+| :--- | :--- |
+| `address` | Rua do imóvel. Vem digitada de formas diferentes (às vezes com número, CEP ou abreviação). |
+| `district` | Bairro. São 1.199 bairros diferentes, e alguns ficam fora da capital (Tamboré, por exemplo, é em Barueri). |
+| `area` | Área do imóvel em m². |
+| `bedrooms` | Número de quartos. |
+| `garage` | Número de vagas de garagem. |
+| `type` | Tipo: Apartamento, Casa, Casa em condomínio ou Studio e kitnet. |
+| `rent` | Valor do aluguel anunciado, em reais, sem taxas. |
+| `total` | Aluguel somado a condomínio, IPTU e seguro incêndio. É o que o inquilino paga de fato por mês. |
 
-### Variáveis Criadas na Análise (Engenharia de Atributos)
-Para tornar a comparação entre imóveis pequenos e grandes mais justa, foram calculadas três métricas auxiliares:
-1. **`encargos` (`total - rent`):** Valor mensal em R$ referente às taxas adicionais (condomínio + IPTU).
-2. **`peso_encargos_pct` (`(encargos / rent) * 100`):** Percentual que as taxas adicionais representam sobre o valor do aluguel base.
-3. **`preco_m2` (`rent / area`):** Valor do aluguel mensal por metro quadrado ($	ext{R\$/m}^2$).
+Também criei duas colunas para comparar melhor:
 
----
+- `encargos = total - rent` → quanto se paga além do aluguel;
+- `preco_m2 = rent / area` → aluguel por metro quadrado, para comparar imóvel pequeno com imóvel grande.
 
-## 🛠️ 3. Ferramentas e Tecnologias Empregadas
+## Ferramentas
 
-* **Python 3.11:** Linguagem principal para auditoria, limpeza, agregação estatística e visualização reprodutível.
-* **Pandas & NumPy:** Manipulação tabular, filtragem de inconsistências, agrupamentos (`groupby`) e cálculos de correlação.
-* **Matplotlib & Seaborn:** Construção dos gráficos estatísticos padronizados em alta resolução (`150 DPI`).
-* **Jupyter Notebook / Google Colab:** Ambiente interativo documentando código e raciocínio passo a passo.
+- Python 3.12
+- pandas (leitura, limpeza e agrupamentos)
+- matplotlib e seaborn (gráficos)
+- openpyxl (exportar as tabelas para Excel)
+- Jupyter Notebook
 
----
+## Como executar
 
-## 🚀 4. Passo a Passo para Executar o Projeto
-
-1. **Clonar este repositório:**
+1. Clone o repositório:
    ```bash
    git clone https://github.com/Henri742/Desafio-SYNAPTA-Henrique-Ramos.git
    cd Desafio-SYNAPTA-Henrique-Ramos
    ```
-2. **Baixar o dataset original:**
-   * Acesse [Sao Paulo Housing Prices no Kaggle](https://www.kaggle.com/datasets/renatosn/sao-paulo-housing-prices), baixe o arquivo `data.csv` e coloque-o na pasta raiz do projeto (veja detalhes em `data/COMO_BAIXAR_OS_DADOS.md`).
-3. **Instalar as dependências:**
+2. Baixe o `data.csv` do Kaggle e coloque dentro da pasta `data/`.
+3. Instale as bibliotecas:
    ```bash
    pip install -r requirements.txt
    ```
-4. **Executar a análise:**
-   * Para rodar o script completo no terminal:
-     ```bash
-     python analise_alugueis_sp.py
-     ```
-   * Ou abra o arquivo `analise_alugueis_sp.ipynb` no VS Code, JupyterLab ou Google Colab.
+4. Rode a análise de um destes jeitos:
+   - `python analise_alugueis_sp.py` (gera os gráficos em `graficos/` e as tabelas em `resultados/tabelas_resumo.xlsx`)
+   - ou abra `analise_alugueis_sp.ipynb` no Jupyter, VS Code ou Google Colab. O notebook já está salvo com as saídas, então dá para ler sem executar.
 
----
+### Estrutura
 
-## 🧹 5. Auditoria, Limpeza e Preparação dos Dados
+```
+analise_alugueis_sp.ipynb   notebook com a análise e as saídas
+analise_alugueis_sp.py      mesmo código em script
+graficos/                   imagens usadas neste README
+resultados/                 tabelas finais em Excel
+data/                       onde colocar o data.csv
+requirements.txt
+```
 
-Antes de calcular indicadores, a base bruta (`11.657 linhas x 8 colunas`) passou por uma verificação estrutural rigorosa:
+## Limpeza dos dados
 
-1. **Valores Ausentes (`NaN`) e Duplicatas Exatas:**
-   * Não foram encontrados valores nulos (`0` células vazias em todas as 8 colunas) nem linhas 100% idênticas (`0` duplicatas exatas).
-2. **Inconsistências Físicas de Área (`area < 10 m²` — 7 registros):**
-   * Foram detectados **2 imóveis com área igual a 0 $	ext{m}^2$** (na Rua Relíquia e na Rua Edmundo de Amicis) e **5 imóveis com área entre 1 $	ext{m}^2$ e 5 $	ext{m}^2$** (incluindo uma casa em condomínio no *Jardim dos Estados* registrada com **1 $	ext{m}^2$, 4 quartos, 3 vagas e aluguel de R$ 8.500**, além de um studio no *Butantã* com **1 $	ext{m}^2$ e 1 vaga**). Como o código de obras e a realidade física inviabilizam moradias com menos de $10	ext{ m}^2$, esses **7 registros foram removidos** para não distorcerem o cálculo de preço por metro quadrado.
-3. **Imóveis com Zero Quartos (`bedrooms == 0` — 37 registros):**
-   * Ao cruzar a coluna `bedrooms == 0` com o tipo de imóvel (`type`), verificou-se que **26 registros são do tipo `Studio e kitnet`**, nos quais a planta em conceito aberto (sem parede divisória para dormitório) torna o preenchimento `0 quartos` perfeitamente plausível.
-   * Entretanto, **11 registros eram classificados como `Apartamento` (7) ou `Casa` (4)** com zero quartos. Esses **11 registros inconsistentes foram removidos**, enquanto os 26 *Studios* foram preservados.
-4. **Resultado da Limpeza:**
-   * Foram removidos ao todo **18 registros inconsistentes** ($0,15\%$ do total), consolidando uma base limpa e validada com **11.639 imóveis**.
+Primeiro conferi se havia problema na base antes de calcular qualquer coisa.
 
----
+**Valores ausentes:** nenhum. Todas as 8 colunas estão completas.
 
-## 📈 6. Resultados Estatísticos e Visualizações
+**Linhas repetidas:** nenhuma linha é idêntica. Mas, como o endereço é digitado de formas diferentes, comparei também as linhas ignorando a coluna `address` e apareceram **5 pares** iguais em todo o resto. Olhando um por um, são o mesmo anúncio com o endereço escrito diferente, por exemplo:
 
-### 6.1. Preço Médio vs. Preço Mediano dos Aluguéis
+- "Rua Evans" e "R. Evans, São Paulo - Sp, 03648-020, Brasil" (Vila Matilde, 40 m², R$ 1.600)
+- "Avenida César Magnani" e "Avenida Cézar Magnani" (Paulicéia, 15 m², R$ 800)
+- "Rua Fiandeiras" e "Rua das Fiandeiras" (Vila Olímpia, 40 m², R$ 2.300)
 
-| Métrica | Aluguel Base (`rent` — Base Bruta) | Aluguel Base (`rent` — Base Limpa) | Custo Total (`total` — Base Limpa) |
+Removi a segunda cópia de cada par (5 linhas).
+
+**Área impossível:** 7 imóveis têm menos de 10 m². Dois aparecem com 0 m² e os outros entre 1 e 5 m². O caso mais claro é uma casa em condomínio no Jardim dos Estados com **1 m², 4 quartos, 3 vagas e aluguel de R$ 8.500**. Não existe moradia assim, então é erro de digitação. Removi os 7.
+
+**Zero quartos:** 37 imóveis têm `bedrooms = 0`. Separando por tipo:
+
+| Tipo | Quantos | Decisão |
+| :--- | :---: | :--- |
+| Studio e kitnet | 26 | Mantidos. Studio costuma não ter quarto separado, então 0 faz sentido. |
+| Apartamento | 7 | Removidos. Apartamento sem nenhum quarto não é plausível. |
+| Casa | 4 | Removidos, pelo mesmo motivo. |
+
+**Preço por m² absurdo:** calculei o aluguel por m² de cada imóvel. O normal vai até uns R$ 370/m², mas 3 anúncios passam de R$ 700/m²: um studio de 24 m² por **R$ 25.000** (o único aluguel acima de R$ 15.000 em toda a base), uma casa de 15 m² por R$ 15.000 e um apartamento de 12 m² por R$ 9.136. Provavelmente é zero a mais ou área errada. Removi os 3.
+
+**Outras verificações que não exigiram mudança:** nenhum `total` menor que o `rent`, nenhum aluguel negativo ou zerado (o menor é R$ 500). Os outros aluguéis altos foram mantidos, porque batem com imóveis grandes em bairros caros.
+
+**Um detalhe estranho:** 113 anúncios têm aluguel de exatamente R$ 15.000 e, tirando o studio acima, nenhum passa disso. Parece um limite do site de onde os dados vieram (ou da coleta). Mantive esses imóveis, mas isso quer dizer que os imóveis mais caros provavelmente estão "cortados" em R$ 15.000.
+
+**Resultado:** saíram 26 linhas (0,2% da base) e a análise segue com **11.631 imóveis**.
+
+## Resultados
+
+### 1. Média e mediana do aluguel
+
+| | Base original | Base limpa | Total mensal (base limpa) |
 | :--- | :---: | :---: | :---: |
-| **Quantidade de Imóveis** | 11.657 | 11.639 | 11.639 |
-| **Preço Médio** | R$ 3.250,81 | **R$ 3.250,50** | **R$ 4.080,27** |
-| **Preço Mediano** | R$ 2.415,00 | **R$ 2.420,00** | **R$ 3.057,00** |
-| **Desvio Padrão** | R$ 2.650,71 | R$ 2.649,28 | R$ 3.351,91 |
-| **Mínimo / Máximo** | R$ 500 / R$ 25.000 | R$ 500 / R$ 25.000 | R$ 509 / R$ 28.700 |
+| Imóveis | 11.657 | 11.631 | 11.631 |
+| Média | R$ 3.250,81 | **R$ 3.247,74** | R$ 4.077,64 |
+| Mediana | R$ 2.415,00 | **R$ 2.420,00** | R$ 3.057,00 |
+| Menor / maior | R$ 500 / R$ 25.000 | R$ 500 / R$ 15.000 | R$ 509 / R$ 28.700 |
 
-**Por que a Média (R$ 3.250,50) e a Mediana (R$ 2.420,00) são tão diferentes?**  
-A **mediana** divide a amostra exatamente ao meio: $50\%$ dos imóveis em São Paulo custam até R$ 2.420,00. Já a **média** soma todos os valores e divide pelo total de imóveis, sendo fortemente influenciada por valores extremos (*outliers*). Como existem mansões e apartamentos de luxo anunciados por até R$ 25.000,00 (enquanto nenhum aluguel pode ser menor que zero), forma-se uma **assimetria positiva (cauda longa à direita)** que puxa a média **R$ 830,50 (+34,3%) para cima da mediana**. Por isso, a mediana retrata melhor o imóvel "típico" paulistano.
+A limpeza quase não mexeu nesses números, o que mostra que os erros eram poucos.
 
-![Gráfico 1 - Distribuição Média vs Mediana](graficos/01_distribuicao_media_mediana.png)
+A **mediana** é o valor do meio: metade dos imóveis tem aluguel de até R$ 2.420. A **média** soma tudo e divide pelo total, então sente muito o efeito de poucos imóveis caríssimos. Como o aluguel não desce abaixo de R$ 500 mas sobe até R$ 15.000, esses valores altos puxam a média para cima: ela fica **R$ 828 (34%) acima da mediana**. Dá para ver isso no gráfico abaixo:
 
----
+![Distribuição dos aluguéis com média e mediana](graficos/01_distribuicao_media_mediana.png)
 
-### 6.2. Localidades com Maiores e Menores Preços Médios (Amostra $\ge 30$ registros)
+*A maioria dos anúncios fica entre R$ 1.000 e R$ 4.000 e depois vem uma "cauda" longa para a direita. A linha tracejada (média) fica deslocada para a direita da linha contínua (mediana) justamente por causa dessa cauda. Por isso, para falar do aluguel "típico", a mediana representa melhor.*
 
-Na base completa existem 1.199 bairros, mas centenas possuem apenas 1 a 5 anúncios (por exemplo, *Jardim Tango* tem apenas 1 imóvel anunciado por R$ 15.000). Em cumprimento ao edital (*"utilizando apenas grupos com quantidade razoável de registros"*), aplicou-se o critério mínimo de **30 imóveis por bairro ($n \ge 30$)**, garantindo representatividade estatística:
+### 2. Bairros mais caros e mais baratos
 
-#### Top 10 Bairros com Maiores Preços Médios ($n \ge 30$)
+Muitos bairros têm só 1 ou 2 anúncios, e aí um único imóvel de luxo já coloca o bairro no topo. Por isso usei só os bairros com **pelo menos 30 anúncios**, o que deixa 78 bairros na comparação.
 
-| Posição | Bairro (`district`) | Qtd. Imóveis | Aluguel Médio | Aluguel Mediano | Área Mediana | Mediana R$/m² |
+![10 bairros mais caros e 10 mais baratos](graficos/02_top10_bairros_caros_baratos.png)
+
+*Cada barra é o aluguel médio do bairro e o "n" é a quantidade de anúncios. Os mais caros pagam cerca de 4 a 5 vezes o que se paga nos mais baratos.*
+
+**Mais caros**
+
+| | Bairro | Anúncios | Aluguel médio | Aluguel mediano | Área mediana | R$/m² mediano |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **1º** | **Jardim Leonor** | 38 | **R$ 7.455,74** | R$ 7.428,00 | 167,5 m² | R$ 38,73/m² |
-| **2º** | **Tamboré** | 34 | **R$ 6.912,68** | R$ 6.550,00 | 113,0 m² | R$ 59,48/m² |
-| **3º** | **Cerqueira César** | 140 | **R$ 6.750,66** | R$ 5.925,00 | 92,0 m² | R$ 65,90/m² |
-| **4º** | **Jardim Paulista** | 220 | **R$ 6.305,96** | R$ 5.000,00 | 90,0 m² | R$ 63,68/m² |
-| **5º** | **Paraíso** | 89 | **R$ 6.285,56** | R$ 4.571,00 | 96,0 m² | R$ 55,83/m² |
-| **6º** | **Vila Nova Conceição** | 77 | **R$ 6.246,77** | R$ 4.850,00 | 70,0 m² | R$ 77,25/m² |
-| **7º** | **Itaim Bibi** | 51 | **R$ 6.105,29** | R$ 5.000,00 | 70,0 m² | **R$ 83,33/m²** |
-| **8º** | **Brooklin Paulista** | 46 | **R$ 6.074,67** | R$ 4.550,00 | 114,0 m² | R$ 46,63/m² |
-| **9º** | **Cidade Monções** | 49 | **R$ 6.034,27** | R$ 4.500,00 | 65,0 m² | R$ 74,40/m² |
-| **10º** | **Vila Madalena** | 32 | **R$ 5.835,31** | R$ 4.125,00 | 71,5 m² | R$ 67,06/m² |
+| 1 | Jardim Leonor | 38 | R$ 7.455,74 | R$ 7.428 | 167,5 m² | R$ 38,73 |
+| 2 | Tamboré | 34 | R$ 6.912,68 | R$ 6.550 | 113 m² | R$ 59,48 |
+| 3 | Cerqueira César | 140 | R$ 6.750,66 | R$ 5.925 | 92 m² | R$ 65,90 |
+| 4 | Jardim Paulista | 220 | R$ 6.305,96 | R$ 5.000 | 90 m² | R$ 63,68 |
+| 5 | Paraíso | 89 | R$ 6.285,56 | R$ 4.571 | 96 m² | R$ 55,83 |
+| 6 | Vila Nova Conceição | 77 | R$ 6.246,77 | R$ 4.850 | 70 m² | R$ 77,25 |
+| 7 | Itaim Bibi | 51 | R$ 6.105,29 | R$ 5.000 | 70 m² | R$ 83,33 |
+| 8 | Brooklin Paulista | 46 | R$ 6.074,67 | R$ 4.550 | 114 m² | R$ 46,63 |
+| 9 | Cidade Monções | 49 | R$ 6.034,27 | R$ 4.500 | 65 m² | R$ 74,40 |
+| 10 | Vila Madalena | 32 | R$ 5.835,31 | R$ 4.125 | 71,5 m² | R$ 67,06 |
 
-#### Top 10 Bairros com Menores Preços Médios ($n \ge 30$)
+**Mais baratos**
 
-| Posição | Bairro (`district`) | Qtd. Imóveis | Aluguel Médio | Aluguel Mediano | Área Mediana | Mediana R$/m² |
+| | Bairro | Anúncios | Aluguel médio | Aluguel mediano | Área mediana | R$/m² mediano |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **1º** | **Taboão** | 49 | **R$ 1.473,14** | R$ 1.250,00 | 52,0 m² | R$ 23,11/m² |
-| **2º** | **Sé** | 63 | **R$ 1.593,30** | R$ 1.400,00 | 40,0 m² | R$ 30,65/m² |
-| **3º** | **Campos Elíseos** | 117 | **R$ 1.646,79** | R$ 1.550,00 | 40,0 m² | R$ 33,23/m² |
-| **4º** | **Santa Efigênia** | 43 | **R$ 1.647,53** | R$ 1.390,00 | 42,0 m² | R$ 32,33/m² |
-| **5º** | **Vila Ema** | 36 | **R$ 1.736,86** | R$ 1.575,00 | 50,5 m² | R$ 32,32/m² |
-| **6º** | **Liberdade** | 141 | **R$ 1.831,74** | R$ 1.700,00 | 40,0 m² | R$ 40,89/m² |
-| **7º** | **Centro Histórico de SP** | 73 | **R$ 1.923,47** | R$ 1.600,00 | 42,0 m² | R$ 36,85/m² |
-| **8º** | **Penha de França** | 40 | **R$ 1.975,82** | R$ 1.700,00 | 51,5 m² | R$ 33,52/m² |
-| **9º** | **Brás** | 141 | **R$ 1.992,66** | R$ 1.836,00 | 43,0 m² | R$ 44,44/m² |
-| **10º** | **Vila Formosa** | 64 | **R$ 2.041,92** | R$ 1.725,00 | 49,0 m² | R$ 34,83/m² |
+| 1 | Taboão | 49 | R$ 1.473,14 | R$ 1.250 | 52 m² | R$ 23,11 |
+| 2 | Sé | 63 | R$ 1.593,30 | R$ 1.400 | 40 m² | R$ 30,65 |
+| 3 | Campos Elíseos | 117 | R$ 1.646,79 | R$ 1.550 | 40 m² | R$ 33,23 |
+| 4 | Santa Efigênia | 43 | R$ 1.647,53 | R$ 1.390 | 42 m² | R$ 32,33 |
+| 5 | Vila Ema | 36 | R$ 1.736,86 | R$ 1.575 | 50,5 m² | R$ 32,32 |
+| 6 | Liberdade | 141 | R$ 1.831,74 | R$ 1.700 | 40 m² | R$ 40,89 |
+| 7 | Centro Histórico de São Paulo | 73 | R$ 1.923,47 | R$ 1.600 | 42 m² | R$ 36,85 |
+| 8 | Penha de França | 40 | R$ 1.975,82 | R$ 1.700 | 51,5 m² | R$ 33,52 |
+| 9 | Brás | 141 | R$ 1.992,66 | R$ 1.836 | 43 m² | R$ 44,44 |
+| 10 | Vila Formosa | 64 | R$ 2.041,92 | R$ 1.725 | 49 m² | R$ 34,83 |
 
-![Gráfico 2 - Top 10 Bairros Mais Caros e Mais Baratos](graficos/02_top10_bairros_caros_baratos.png)
+Uma coisa que chamou atenção: o topo da lista não é caro sempre pelo mesmo motivo. O Jardim Leonor lidera porque os imóveis são grandes (mediana de 167,5 m²), mas o m² lá custa R$ 38,73. Já no Itaim Bibi e na Vila Nova Conceição os imóveis têm metade do tamanho (70 m²) e o m² passa de R$ 77. Ou seja, num caso o preço vem do tamanho, no outro vem da localização.
 
----
+Outra: entre os mais baratos aparecem bairros centrais (Sé, Santa Efigênia, Campos Elíseos). Lá o aluguel é baixo principalmente porque os imóveis são pequenos (40 m²), não porque o m² seja muito barato.
 
-### 6.3. Comparação do Valor do Aluguel com Área, Quartos, Vagas e Tipo de Imóvel
+### 3. Aluguel x área
 
-1. **Relação com a Área (`area`):** Apresenta a maior correlação linear positiva com o aluguel ($r = 0,667$). À medida que a metragem aumenta, o valor médio do aluguel cresce de forma consistente, mas a dispersão também se amplia (um imóvel de $100	ext{ m}^2$ pode custar R$ 2.000 na periferia ou R$ 12.000 em bairro nobre).
-2. **Relação com Vagas de Garagem (`garage`) e Quartos (`bedrooms`):** O número de vagas de garagem tem correlação mais forte com o preço ($r = 0,617$) do que o próprio número de quartos ($r = 0,531$). Após a limpeza dos erros cadastrais, a progressão de preço por número de dormitórios é perfeitamente monotônica de 0 (Studio) até 5 quartos:
+Calculei a correlação de cada característica com o aluguel (vai de 0 = nenhuma relação até 1 = relação perfeita):
 
-| Quartos | Qtd. Imóveis | Área Média | Aluguel Médio | Aluguel Mediano |
+| Característica | Correlação com o aluguel |
+| :--- | :---: |
+| Área | 0,671 |
+| Vagas de garagem | 0,620 |
+| Quartos | 0,537 |
+
+A área é a que mais acompanha o preço:
+
+![Aluguel em função da área](graficos/03_aluguel_vs_area.png)
+
+*Cada ponto é um imóvel. Conforme a área cresce o aluguel tende a subir, mas os pontos se espalham cada vez mais: um imóvel de 200 m² pode estar anunciado por R$ 3.000 ou por R$ 15.000. Isso mostra que a área sozinha não explica o preço. Os studios (pontos azuis) ficam todos na faixa de área pequena, e a linha de pontos em R$ 15.000 é o "teto" comentado na limpeza.*
+
+### 4. Aluguel x quartos e vagas de garagem
+
+| Quartos | Anúncios | Área média | Aluguel médio | Aluguel mediano |
 | :---: | :---: | :---: | :---: | :---: |
-| **0 (Studio)** | 26 | 30,9 m² | R$ 1.541,96 | R$ 1.253,50 |
-| **1 quarto** | 4.190 | 40,6 m² | R$ 2.154,62 | R$ 1.714,50 |
-| **2 quartos** | 4.345 | 70,5 m² | R$ 2.749,60 | R$ 2.200,00 |
-| **3 quartos** | 2.422 | 138,7 m² | R$ 4.795,90 | R$ 3.800,00 |
-| **4 quartos** | 542 | 249,8 m² | R$ 7.804,99 | R$ 7.115,00 |
-| **5 quartos** | 91 | 322,7 m² | R$ 8.568,25 | R$ 8.000,00 |
-| **6 quartos** | 23 | 331,4 m² | R$ 8.346,30 | R$ 8.000,00 |
+| 0 (studio) | 26 | 30,9 m² | R$ 1.541,96 | R$ 1.253,50 |
+| 1 | 4.184 | 40,7 m² | R$ 2.144,84 | R$ 1.708,50 |
+| 2 | 4.343 | 70,6 m² | R$ 2.749,87 | R$ 2.200,00 |
+| 3 | 2.422 | 138,7 m² | R$ 4.795,90 | R$ 3.800,00 |
+| 4 | 542 | 249,8 m² | R$ 7.804,99 | R$ 7.115,00 |
+| 5 | 91 | 322,7 m² | R$ 8.568,25 | R$ 8.000,00 |
+| 6 | 23 | 331,4 m² | R$ 8.346,30 | R$ 8.000,00 |
 
-![Gráfico 3 - Aluguel vs Área e Quartos](graficos/03_aluguel_vs_area_e_quartos.png)
+![Aluguel por quartos e por vagas](graficos/04_aluguel_por_quartos_e_vagas.png)
 
-3. **Custo Total e Preço por $	ext{m}^2$ segundo o Tipo de Imóvel:**
+*À esquerda, cada caixa mostra onde fica a metade central dos aluguéis para cada número de quartos, e a linha dentro dela é a mediana. O preço sobe de 0 a 5 quartos e o salto maior é de 2 para 3 e de 3 para 4 quartos. Com 5 e 6 quartos a mediana praticamente para em R$ 8.000 (e com 6 há só 23 anúncios). À direita, o aluguel mediano sobe a cada vaga: de R$ 1.530 sem garagem para R$ 6.000 com 3 vagas.*
 
-| Tipo de Imóvel | Qtd. | Aluguel Mediano | Encargos Medianos (`total - rent`) | Total Mediano | Preço Mediano / m² |
+Repare que a área média também cresce muito junto com os quartos (de 40 m² com 1 quarto para 250 m² com 4). Então boa parte do "efeito dos quartos" é, na verdade, o imóvel ser maior.
+
+### 5. Tipo de imóvel e quanto se paga no total
+
+| Tipo | Anúncios | Aluguel mediano | Encargos medianos | Total mediano | R$/m² mediano |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Apartamento** | 7.186 | R$ 2.500,00 | **R$ 775,50 (+30,3%)** | **R$ 3.296,00** | R$ 41,60/m² |
-| **Casa** | 2.833 | R$ 2.600,00 | R$ 193,00 (+8,1%) | R$ 2.842,00 | R$ 24,67/m² |
-| **Casa em condomínio** | 240 | R$ 2.200,00 | R$ 302,00 (+12,2%) | R$ 2.681,00 | R$ 31,25/m² |
-| **Studio e kitnet** | 1.380 | R$ 1.848,00 | R$ 488,00 (+24,2%) | R$ 2.318,00 | **R$ 61,11/m²** |
+| Studio e kitnet | 1.379 | R$ 1.846 | R$ 487 | R$ 2.318 | R$ 61,11 |
+| Casa em condomínio | 239 | R$ 2.200 | R$ 307 | R$ 2.650 | R$ 31,25 |
+| Casa | 2.831 | R$ 2.600 | R$ 193 | R$ 2.842 | R$ 24,67 |
+| Apartamento | 7.182 | R$ 2.500 | R$ 776 | R$ 3.296 | R$ 41,60 |
 
-![Gráfico 4 - Custo Total e Preço por m2 por Tipo](graficos/04_custo_total_e_m2_por_tipo.png)
+![Custo total e preço por m² por tipo](graficos/05_custo_total_e_m2_por_tipo.png)
 
----
+*À esquerda, a parte azul é o aluguel e a laranja é o que vem a mais (condomínio, IPTU e seguro). O apartamento tem aluguel menor que a casa, mas por causa do condomínio acaba sendo o mais caro no total. À direita, o studio é o mais barato no mês, porém o mais caro por metro quadrado.* (As barras somam as medianas de aluguel e de encargos, por isso a altura pode diferir alguns reais do "total mediano" da tabela.)
 
-## 💡 7. Cinco Conclusões Objetivas Apoiadas nos Dados
+## Conclusões
 
-1. **Forte desigualdade e assimetria positiva nos preços:** Enquanto metade dos imóveis anunciados tem aluguel de até **R$ 2.420,00** (mediana), os imóveis de alto padrão (até R$ 25.000,00) elevam a média geral para **R$ 3.250,50** (+34,3% acima da mediana).
-2. **Duas dinâmicas distintas nos bairros mais caros (Metragem vs. Valorização do $	ext{m}^2$):** Bairros residenciais arborizados como *Jardim Leonor* lideram a média nominal (**R$ 7.455,74**) porque ofertam mansões amplas (mediana de $167,5	ext{ m}^2$, custando R$ 38,73/$	ext{m}^2$). Já os polos financeiros como *Itaim Bibi* (**R$ 83,33/$	ext{m}^2$**) e *Vila Nova Conceição* (**R$ 77,25/$	ext{m}^2$**) possuem o metro quadrado mais caro da cidade em imóveis bem mais compactos ($70	ext{ m}^2$).
-3. **O paradoxo dos Studios e Kitnets (menor boleto total, porém o $	ext{m}^2$ mais caro):** Embora apresentem o menor aluguel mediano (**R$ 1.848,00**), os *Studios e kitnets* cobram **R$ 61,11 por $	ext{m}^2$** — mais do que o dobro do metro quadrado de uma *Casa* (**R$ 24,67/$	ext{m}^2$**), refletindo sua alta concentração nas zonas centrais e corporativas.
-4. **O peso decisivo do condomínio nos Apartamentos:** Em apartamentos, as taxas adicionais (`total - rent`) somam mediana de **R$ 775,50/mês** (+30,3% sobre o aluguel). Isso faz com que um apartamento com aluguel mediano menor (R$ 2.500) resulte num boleto final **R$ 454,00 mais caro** (**R$ 3.296,00**) do que uma casa de rua com aluguel base de R$ 2.600 (**R$ 2.842,00** no total).
-5. **Capacidade de garagem e área superam o número de quartos na formação do preço:** O coeficiente de correlação mostra que a área útil ($r = 0,667$) e as vagas de garagem ($r = 0,617$) acompanham mais fortemente a elevação dos preços do que a simples contagem de quartos ($r = 0,531$), havendo um salto expressivo de preço a partir do 3º dormitório (mediana salta de R$ 2.200 para R$ 3.800).
+1. **O aluguel típico é bem menor que a média.** Metade dos imóveis custa até R$ 2.420, enquanto a média é R$ 3.248. A diferença vem de poucos imóveis muito caros.
+2. **Localização pesa muito.** Com pelo menos 30 anúncios por bairro, o aluguel médio vai de R$ 1.473 (Taboão) a R$ 7.456 (Jardim Leonor), cerca de 5 vezes mais.
+3. **Área e vagas acompanham o preço mais do que os quartos.** Correlações de 0,671 (área), 0,620 (vagas) e 0,537 (quartos). A mediana passa de R$ 1.530 sem vaga para R$ 6.000 com 3 vagas.
+4. **No apartamento, o condomínio muda a conta.** O aluguel mediano do apartamento (R$ 2.500) é menor que o da casa (R$ 2.600), mas com os encargos o total sobe para R$ 3.296, contra R$ 2.842 da casa.
+5. **Studio é barato no mês, mas caro por m².** Tem o menor total mediano (R$ 2.318) e o maior preço por m² (R$ 61,11), mais que o dobro da casa (R$ 24,67).
+6. **Bairro caro pode ser caro por motivos diferentes.** No Jardim Leonor o preço vem de imóveis grandes; no Itaim Bibi vem do m² caro (R$ 83,33) em imóveis menores.
 
----
+## Resposta à pergunta
 
-## 🧭 8. Resposta à Pergunta Orientadora e Limitações da Análise
+**O que acompanha os maiores preços:** bairros da região sudoeste e centro-sul (Jardim Leonor, Cerqueira César, Jardim Paulista, Itaim Bibi, Vila Nova Conceição), áreas acima de 100 m², 2 ou mais vagas e 3 ou mais quartos. Quando o critério é o preço por m², os mais caros são studios e apartamentos pequenos perto dos centros financeiros.
 
-### Quais características parecem acompanhar os maiores e os menores preços de aluguel?
-* **Maiores preços:** Estão fortemente associados à **combinação entre localização no eixo Sudoeste/Centro-Sul** (*Jardim Leonor, Cerqueira César, Jardim Paulista, Itaim Bibi, Vila Nova Conceição*), **ampla metragem útil ($> 100	ext{ m}^2$)**, **presença de 2 ou mais vagas de garagem** e **3 a 5 dormitórios**. No recorte de preço relativo ($	ext{R\$/m}^2$), os maiores valores acompanham *Studios* e apartamentos compactos próximos aos polos financeiros.
-* **Menores preços:** Acompanham imóveis com **0 ou 1 quarto**, **ausência de vaga de garagem** (mediana de R$ 1.530,00 para imóveis sem garagem contra R$ 2.448,00 com 1 vaga) e localização em **bairros periféricos** (*Taboão, Vila Ema, Penha de França*) ou em **zonas antigas do Centro** com predomínio de quitinetes compactas (*Sé, Santa Efigênia, Campos Elíseos*).
+**O que acompanha os menores preços:** imóveis com 0 ou 1 quarto, sem vaga de garagem e em bairros mais afastados (Taboão, Vila Ema, Penha de França) ou no centro antigo, onde predominam imóveis pequenos (Sé, Santa Efigênia, Campos Elíseos).
 
-### O que os dados NÃO permitem concluir? (Limitações)
-1. **Estado de conservação, idade e padrão de acabamento:** O dataset não informa se o imóvel é recém-construído, reformado, mobiliado ou se apresenta problemas estruturais — fatores que explicam por que dois apartamentos do mesmo tamanho e na mesma rua têm preços muito diferentes.
-2. **Infraestrutura do prédio e do entorno imediato:** Não há variáveis sobre lazer do condomínio (piscina, academia, portaria 24h), andar do apartamento, incidência solar, ruído urbano, segurança pública da rua ou distância exata até estações de metrô.
-3. **Ausência de quantidade de banheiros e suítes:** A base não discrimina o número de banheiros ou suítes, atributo fundamental na precificação de imóveis de médio e alto padrão.
-4. **Diferença entre preço anunciado e valor efetivamente contratado:** Os registros refletem o *asking price* (preço pedido no anúncio), não o valor final fechado após negociação ou descontos, além de estarem sujeitos ao viés de seleção da plataforma de anúncios e a um retrato estático no tempo (sem série histórica).
+**Cuidado:** tudo isso é associação, não causa. Ter mais vagas não "faz" o aluguel subir; o mais provável é que imóveis maiores e em bairros mais caros tenham mais vagas. As características andam juntas e a análise não separa o efeito de cada uma.
 
----
+## Limitações
 
-## 🤖 9. Declaração de Uso de Inteligência Artificial Generativa
+- **Faltam informações importantes:** idade e estado do imóvel, se é mobiliado, andar, lazer do prédio, número de banheiros e distância do metrô. Isso explica por que imóveis parecidos na mesma região têm preços tão diferentes.
+- **Preço anunciado não é preço fechado.** O valor é o pedido no anúncio, antes de qualquer negociação.
+- **Não é só a capital.** Alguns bairros são de cidades vizinhas (Tamboré fica em Barueri, por exemplo), e o dataset não tem uma coluna de cidade para separar.
+- **Concentração dos anúncios.** 60% dos bairros têm menos de 5 anúncios, por isso só 78 entraram no ranking.
+- **Teto de R$ 15.000.** Como nenhum aluguel válido passa desse valor, a média dos bairros mais caros pode estar subestimada. Bairros com poucos dados ficaram de fora e podem ser caros ou baratos.
+- **Um retrato de um momento só.** Não há data, então não dá para ver se os preços estão subindo ou caindo, nem saber de quando são os anúncios.
+- **Pode haver repetições que não encontrei.** Removi os 5 pares óbvios, mas o mesmo imóvel pode ter sido anunciado com área ou preço um pouco diferentes.
 
-Em conformidade com os itens 3 e 4 do Comunicado nº 1/2026 da SYNAPTA, declaro que a ferramenta de Inteligência Artificial Generativa (**Google Gemini**) foi utilizada como assistente de produtividade e revisão técnica nas seguintes frentes:
+## Sugestões a partir dos dados
 
-* **Finalidade do uso:** Apoio na estruturação do script Python (`pandas`, `matplotlib`, `seaborn`) para geração padronizada dos gráficos, organização da estrutura de pastas do repositório e revisão ortográfica/textual do relatório.
-* **Como os resultados foram verificados pelo candidato:**
-  1. Todos os cálculos de média, mediana, desvio padrão, contagens de linhas e filtros de bairros ($n \ge 30$) foram auditados e conferidos diretamente sobre o arquivo `data.csv` por meio de execução local do código e inspeção das tabelas geradas.
-  2. Os casos extremos identificados (como os 7 imóveis com área $< 10	ext{ m}^2$ e a distinção entre os 26 *Studios* e os 11 apartamentos/casas com `bedrooms == 0`) foram inspecionados linha a linha na base original para validar a coerência das regras de negócio antes da exclusão.
-  3. As interpretações analíticas, conclusões e limitações foram integralmente compreendidas, revisadas e validadas pelo autor para apresentação e defesa técnica na etapa de entrevista.
+- Quem procura aluguel deve comparar pelo **total**, não pelo aluguel: em apartamento o condomínio soma, em média, cerca de 30% a mais.
+- Para comparar imóveis de tamanhos diferentes, o **preço por m²** é mais justo que o aluguel.
+- Uma próxima versão poderia cruzar o bairro com dados de transporte e renda da região, e incluir a data dos anúncios.
+
+## Uso de inteligência artificial
+
+Usei ferramentas de IA generativa como apoio neste trabalho:
+
+- **Google Gemini:** na primeira versão, para ajudar a montar o código dos gráficos com pandas/matplotlib, organizar as pastas e revisar a escrita.
+- **Claude (Anthropic):** na revisão final, para reorganizar o código em script e notebook, refazer os gráficos, encontrar os 5 anúncios repetidos com endereço diferente e reescrever este README.
+
+**Como conferi:**
+
+1. Rodei o código no meu computador com o `data.csv` original e comparei as saídas com os números deste README (contagens, médias, medianas, rankings e correlações).
+2. Abri na base as linhas que foram removidas (as 7 com área abaixo de 10 m², os 11 apartamentos/casas com 0 quartos e os 5 pares repetidos) para confirmar que eram mesmo erro ou repetição.
+3. Li e revisei as conclusões e limitações para ter certeza de que entendo cada uma e consigo explicá-las na entrevista.
